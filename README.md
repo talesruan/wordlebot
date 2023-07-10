@@ -1,0 +1,2 @@
+# wordlebot
+Wordle Bot
