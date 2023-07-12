@@ -1,0 +1,22 @@
+{
+  "name": "wordlebot",
+  "version": "1.0.0",
+  "description": "Wordle Bot",
+  "main": "run.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talesruan/wordlebot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/talesruan/wordlebot/issues"
+  },
+  "homepage": "https://github.com/talesruan/wordlebot#readme",
+  "dependencies": {
+    "keypress": "^0.2.1"
+  }
+}
