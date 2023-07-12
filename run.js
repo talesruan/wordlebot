@@ -18,6 +18,8 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
+let uiState = "botLog"; // botLog
+
 const gameState = {
 	attempts: [],
 	scores: []
@@ -25,38 +27,32 @@ const gameState = {
 const run = () => {
 	console.log("Startup:");
 	console.log("Dictionary has " + getDictionary().length + " words");
-
 	process.stdin.on('keypress', function (ch, key) {
 		if (key) processKeypress(key.name);
 	});
-
 	process.stdin.setRawMode(true);
-
-	// while (!(isGameWon(gameState) || isGameLost(gameState))) {
-	//
-	// }
-
 	runTurn();
-
 };
-
 
 const runTurn = () => {
 	scoringCol = 0;
 	if (isGameWon(gameState)) {
-		scoringRow = -1
 		drawBoard(gameState)
 		process.exit();
 		return;
 	}
+	uiState = "botLog";
+	drawBoard(gameState)
+	console.log("Running bot...");
 	const botGuess = bot.execute(gameState, getDictionary());
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
 	registerBotGuess(gameState, botGuess);
-	drawBoard(gameState)
+
+	// drawBoard(gameState)
 
 	console.log("Register score and press <ENTER>");
-}
+};
 
 const registerBotGuess = (gameState, word) => {
 	gameState.attempts.push(word);
@@ -65,28 +61,30 @@ const registerBotGuess = (gameState, word) => {
 		wordScores.push(SCORE_GRAY);
 	}
 	gameState.scores.push(wordScores)
-}
-
-const processKeypress = (keyName) => {
-	console.log("Processing " + keyName);
-	if (keyName === "return") {
-		onEnter();
-	} else if (keyName === "up") {
-		gameState.scores[scoringRow][scoringCol] = Math.min(SCORE_GREEN, gameState.scores[scoringRow][scoringCol] + 1);
-		drawBoard(gameState)
-	} else if (keyName === "down") {
-		gameState.scores[scoringRow][scoringCol] = Math.max(SCORE_GRAY, gameState.scores[scoringRow][scoringCol] - 1);
-		drawBoard(gameState)
-	} else if (keyName === "left") {
-		scoringCol = Math.max(0, scoringCol - 1);
-	} else if (keyName === "right") {
-		scoringCol = Math.min(numberOfLetters - 1, scoringCol + 1);
-	}
 };
 
-const onEnter = () => {
-	scoringRow++;
-	runTurn();
+const processKeypress = (keyName) => {
+	if (uiState === "scoring") {
+		if (keyName === "return") {
+			scoringRow++;
+			runTurn();
+		} else if (keyName === "up") {
+			gameState.scores[scoringRow][scoringCol] = Math.min(SCORE_GREEN, gameState.scores[scoringRow][scoringCol] + 1);
+			drawBoard(gameState)
+		} else if (keyName === "down") {
+			gameState.scores[scoringRow][scoringCol] = Math.max(SCORE_GRAY, gameState.scores[scoringRow][scoringCol] - 1);
+			drawBoard(gameState)
+		} else if (keyName === "left") {
+			scoringCol = Math.max(0, scoringCol - 1);
+		} else if (keyName === "right") {
+			scoringCol = Math.min(numberOfLetters - 1, scoringCol + 1);
+		}
+	} else if (uiState === "botLog") {
+		if (keyName === "return") {
+			uiState = "scoring";
+			drawBoard(gameState);
+		}
+	}
 };
 
 const getDictionary = () => {
@@ -105,7 +103,6 @@ const drawBoard = (gameState) => {
 	console.clear();
 	console.log("");
 	console.log("");
-	// console.log("word is", chosenWord);
 	const separator = " ".repeat(boardMargin) + "+---".repeat(numberOfLetters) + "+";
 	for (let row = 0; row < maxNumberOfAttempts; row++) {
 		console.log(separator);
@@ -117,7 +114,7 @@ const drawBoard = (gameState) => {
 		}
 		wordString += "|"
 
-		if (row === scoringRow) {
+		if (row === scoringRow && uiState === "scoring") {
 			wordString += " <=== Register score for this attempt"
 		}
 		console.log(wordString);
