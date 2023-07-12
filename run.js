@@ -2,7 +2,8 @@ const fs = require("fs");
 const readline = require('readline').createInterface({input: process.stdin, output: process.stdout,});
 const keypress = require('keypress');
 keypress(process.stdin);
-const bot = require("./randomBot");
+// const bot = require("./randomBot");
+const bot = require("./basicBot");
 
 let dictionary;
 
@@ -18,20 +19,22 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let uiState = "botLog"; // botLog
+let autoScoreWord;
+
+let uiState = "botLog"; // botLog, config
 
 const gameState = {
 	attempts: [],
 	scores: []
 }
 const run = () => {
-	console.log("Startup:");
-	console.log("Dictionary has " + getDictionary().length + " words");
 	process.stdin.on('keypress', function (ch, key) {
 		if (key) processKeypress(key.name);
 	});
 	process.stdin.setRawMode(true);
 	runTurn();
+	console.log("Dictionary has " + getDictionary().length + " words");
+	console.log("Press <TAB> for autoscore");
 };
 
 const runTurn = () => {
@@ -44,24 +47,49 @@ const runTurn = () => {
 	uiState = "botLog";
 	drawBoard(gameState)
 	console.log("Running bot...");
-	const botGuess = bot.execute(gameState, getDictionary());
+	const botGuess = bot.execute(gameState, getDictionary()).toUpperCase();
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
 	registerBotGuess(gameState, botGuess);
 
+	if (autoScoreWord) {
+		gameState.scores.pop();
+		gameState.scores.push(getWordScore(botGuess, autoScoreWord));
+	}
+
 	// drawBoard(gameState)
 
-	console.log("Register score and press <ENTER>");
+	console.log("<ENTER> to continue");
+};
+
+const getWordScore = (attemptedWord, chosenWord) => {
+	const wordScores = [];
+	for (let pos = 0; pos < numberOfLetters; pos++) {
+		const letter = attemptedWord[pos];
+		const letterScore = getLetterScore(chosenWord, letter, pos);
+		wordScores.push(letterScore)
+	}
+	return wordScores;
+};
+
+const getLetterScore = (chosenWord, letter, position) => {
+	if (chosenWord[position] === letter) return SCORE_GREEN;
+	if (chosenWord.split("").includes(letter)) return SCORE_YELLOW;
+	return SCORE_GRAY;
 };
 
 const registerBotGuess = (gameState, word) => {
-	gameState.attempts.push(word);
+	gameState.attempts.push(word.toUpperCase());
 	const wordScores = [];
 	for (let pos = 0; pos < numberOfLetters; pos++) {
 		wordScores.push(SCORE_GRAY);
 	}
 	gameState.scores.push(wordScores)
 };
+
+const validateUserScoring = (gameState) => {
+	// TODO: Implement
+}
 
 const processKeypress = (keyName) => {
 	if (uiState === "scoring") {
@@ -81,8 +109,30 @@ const processKeypress = (keyName) => {
 		}
 	} else if (uiState === "botLog") {
 		if (keyName === "return") {
-			uiState = "scoring";
+			if (autoScoreWord) {
+				runTurn();
+			} else {
+				uiState = "scoring";
+				drawBoard(gameState);
+			}
+		} else if (keyName === "tab") {
+			uiState = "config";
+			// console.log("Received " + keyName);
+			readline.question(`Enter word for autoscore: `, word => {
+				autoScoreWord = word.toUpperCase().substring(0, numberOfLetters);
+				// readline.close();
+				if (gameState.attempts.length > 0) {
+					const lastGuess = gameState.attempts[gameState.attempts.length - 1];
+					gameState.scores.pop();
+					gameState.scores.push(getWordScore(lastGuess, autoScoreWord));
+				}
+			});
+		}
+	} else if (uiState === "config") {
+		if (keyName === "return") {
+			uiState = "botLog";
 			drawBoard(gameState);
+			console.log("Config done.");
 		}
 	}
 };
@@ -91,6 +141,10 @@ const getDictionary = () => {
 	if (dictionary) return dictionary;
 	const dictionaryFile = fs.readFileSync("./dictionaries/termo.json", "utf8");
 	dictionary = JSON.parse(dictionaryFile).map(w => normalizeDictionaryWord(w)).filter(w => w.length === 5);
+
+	// const dictionaryFile = fs.readFileSync("./dictionaries/portuguese.txt", "utf8");
+	// dictionary = dictionaryFile.split("\n").filter(word => word.length === numberOfLetters).map(w => normalizeDictionaryWord(w));
+
 	if (dictionary.length === 0) throw new Error("Dictionary is empty.");
 	return dictionary;
 };
@@ -102,7 +156,11 @@ const normalizeDictionaryWord = (word) => {
 const drawBoard = (gameState) => {
 	console.clear();
 	console.log("");
+	console.log("UI STATE: " + uiState);
 	console.log("");
+	if (autoScoreWord) {
+		console.log(" ".repeat(boardMargin)+"AutoScore: " + autoScoreWord	);
+	}
 	const separator = " ".repeat(boardMargin) + "+---".repeat(numberOfLetters) + "+";
 	for (let row = 0; row < maxNumberOfAttempts; row++) {
 		console.log(separator);
