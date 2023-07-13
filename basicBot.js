@@ -13,11 +13,10 @@ const execute = (gameState, dictionary) => {
 		console.log("First attempt, so using hardcoded starter");
 		return "audio";
 	}
-	if (gameState.attempts.length === 1) {
-		console.log("Second attempt, using hardcoded starter");
-		return "teras";
-
-	}
+	// if (gameState.attempts.length === 1) {
+	// 	console.log("Second attempt, using hardcoded starter");
+	// 	return "teras";
+	// }
 
 	let possibleWords = dictionary;
 	for (let attemptIndex = 0; attemptIndex < gameState.attempts.length; attemptIndex++) {
