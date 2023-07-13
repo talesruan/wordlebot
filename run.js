@@ -12,7 +12,6 @@ const SCORE_GREEN = 3;
 const SCORE_YELLOW = 2;
 const SCORE_GRAY = 1; // Attempted
 const SCORE_NONE = 0; // Not attempted
-const boardMargin = 4;
 
 let scoringRow = 0;
 let scoringCol = 0;
@@ -28,6 +27,11 @@ const rules = {
 };
 
 const game = new Game(rules);
+
+const games = [game, new Game(rules), new Game(rules), new Game(rules)];
+
+const numberOfGames = games.length;
+
 const run = () => {
 	process.stdin.on('keypress', function (ch, key) {
 		if (key) processKeypress(key.name);
@@ -52,33 +56,20 @@ const runTurn = () => {
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
 	registerBotGuess(game, botGuess);
+	registerBotGuess(games[1], botGuess);
 
 	if (autoScoreWord) {
 		game.scores.pop();
-		game.scores.push(getWordScore(botGuess, autoScoreWord));
+		game.addScore(botGuess, autoScoreWord);
+
+		games[1].scores.pop();
+		games[1].addScore(botGuess, autoScoreWord);
 	}
 
 	// drawBoard()
 
 	console.log("<ENTER> to continue");
 };
-
-const getWordScore = (attemptedWord, chosenWord) => {
-	const wordScores = [];
-	for (let pos = 0; pos < rules.numberOfLetters; pos++) {
-		const letter = attemptedWord[pos];
-		const letterScore = getLetterScore(chosenWord, letter, pos);
-		wordScores.push(letterScore)
-	}
-	return wordScores;
-};
-
-const getLetterScore = (chosenWord, letter, position) => {
-	if (chosenWord[position] === letter) return SCORE_GREEN;
-	if (chosenWord.split("").includes(letter)) return SCORE_YELLOW;
-	return SCORE_GRAY;
-};
-
 const registerBotGuess = (game, word) => {
 	game.attempts.push(word.toUpperCase());
 	const wordScores = [];
@@ -121,11 +112,10 @@ const processKeypress = (keyName) => {
 			// console.log("Received " + keyName);
 			readline.question(`Enter word for autoscore: `, word => {
 				autoScoreWord = word.toUpperCase().substring(0, rules.numberOfLetters);
-				// readline.close();
 				if (game.attempts.length > 0) {
 					const lastGuess = game.attempts[game.attempts.length - 1];
 					game.scores.pop();
-					game.scores.push(getWordScore(lastGuess, autoScoreWord));
+					game.addScore(lastGuess, autoScoreWord);
 				}
 			});
 		}
@@ -155,6 +145,10 @@ const normalizeDictionaryWord = (word) => {
 }
 
 const drawBoard = () => {
+
+	const boardMargin = 4;
+	const spaceBetweenBoards = 8;
+
 	console.clear();
 	console.log("");
 	console.log("UI STATE: " + uiState);
@@ -162,16 +156,19 @@ const drawBoard = () => {
 	if (autoScoreWord) {
 		console.log(" ".repeat(boardMargin)+"AutoScore: " + autoScoreWord	);
 	}
-	const separator = " ".repeat(boardMargin) + "+---".repeat(game.rules.numberOfLetters) + "+";
-	for (let row = 0; row < game.rules.maxNumberOfAttempts; row++) {
+	const separator = " ".repeat(boardMargin) + ("+---".repeat(rules.numberOfLetters) + "+" + " ".repeat(spaceBetweenBoards)).repeat(numberOfGames);
+	for (let row = 0; row < rules.maxNumberOfAttempts; row++) {
 		console.log(separator);
 		let wordString = " ".repeat(boardMargin);
-		for (let col = 0; col < game.rules.numberOfLetters; col++) {
-			const letter = game.attempts[row] ? game.attempts[row][col] : " ";
-			const score = game.scores[row] ? game.scores[row][col] : SCORE_NONE;
-			wordString += "|" + getColoredString(" " +letter + " ", getColorByScore(score));
+
+		for (const game of games) {
+			for (let col = 0; col < rules.numberOfLetters; col++) {
+				const letter = game.attempts[row] ? game.attempts[row][col] : " ";
+				const score = game.scores[row] ? game.scores[row][col] : SCORE_NONE;
+				wordString += "|" + getColoredString(" " +letter + " ", getColorByScore(score));
+			}
+			wordString += "|" + " ".repeat(spaceBetweenBoards)
 		}
-		wordString += "|"
 
 		if (row === scoringRow && uiState === "scoring") {
 			wordString += " <=== Register score for this attempt"

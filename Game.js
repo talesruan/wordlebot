@@ -21,4 +21,24 @@ module.exports = class Game {
 		return this.attempts.length >= this.rules.maxNumberOfAttempts;
 	}
 
+	addScore(word, chosenWord) {
+		this.scores.push(getWordScore(word, chosenWord, this.rules));
+	}
+
+};
+
+const getWordScore = (attemptedWord, chosenWord, rules) => {
+	const wordScores = [];
+	for (let pos = 0; pos < rules.numberOfLetters; pos++) {
+		const letter = attemptedWord[pos];
+		const letterScore = getLetterScore(chosenWord, letter, pos);
+		wordScores.push(letterScore)
+	}
+	return wordScores;
+};
+
+const getLetterScore = (chosenWord, letter, position) => {
+	if (chosenWord[position] === letter) return SCORE_GREEN;
+	if (chosenWord.split("").includes(letter)) return SCORE_YELLOW;
+	return SCORE_GRAY;
 };
