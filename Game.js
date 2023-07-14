@@ -21,6 +21,10 @@ module.exports = class Game {
 		return this.attempts.length >= this.rules.maxNumberOfAttempts;
 	}
 
+	isRunning () {
+		return !this.isLost() && !this.isWon();
+	}
+
 	addScore(word, chosenWord) {
 		this.scores.push(getWordScore(word, chosenWord, this.rules));
 	}

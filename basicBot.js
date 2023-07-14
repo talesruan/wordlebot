@@ -10,14 +10,13 @@ const SCORE_GRAY = 1; // Attempted
 const SCORE_NONE = 0; // Not attempted
 const execute = (gameState, dictionary) => {
 	if (gameState.attempts.length === 0) {
-		console.log("First attempt, so using hardcoded starter");
+		// console.log("First attempt, so using hardcoded starter");
 		return "audio";
 	}
-	// if (gameState.attempts.length === 1) {
-	// 	console.log("Second attempt, using hardcoded starter");
-	// 	return "teras";
-	// }
-
+	if (gameState.attempts.length === 1) {
+		// console.log("Second attempt, using hardcoded starter");
+		return "teras";
+	}
 	let possibleWords = dictionary;
 	for (let attemptIndex = 0; attemptIndex < gameState.attempts.length; attemptIndex++) {
 		const attemptedWord = gameState.attempts[attemptIndex];
@@ -37,8 +36,8 @@ const execute = (gameState, dictionary) => {
 		}
 	}
 
-	printWords(possibleWords);
-	console.log("Possible words: " + possibleWords.length);
+	// printWords(possibleWords);
+	// console.log("Possible words: " + possibleWords.length);
 
 	if (possibleWords.length === 0) {
 		console.log("No possible words. Don't know what to do.");

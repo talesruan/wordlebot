@@ -5,6 +5,7 @@ keypress(process.stdin);
 // const bot = require("./randomBot");
 const bot = require("./basicBot");
 const Game = require("./Game");
+const rules = require("./rules").termoRules;
 
 let dictionary;
 
@@ -20,11 +21,6 @@ const currentScores = [];
 let autoScoreWord;
 
 let uiState = "botLog"; // botLog, config
-
-const rules = {
-	numberOfLetters: 5,
-	maxNumberOfAttempts: 6
-};
 
 const game = new Game(rules);
 
