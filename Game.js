@@ -29,6 +29,19 @@ module.exports = class Game {
 		this.scores.push(getWordScore(word, chosenWord, this.rules));
 	}
 
+	clone () {
+		const clone = new Game(this.rules);
+		clone.attempts = [...this.attempts];
+		clone.scores = [...this.scores];
+		return clone;
+	}
+
+	undo () {
+		if (this.attempts.length === 0) return;
+		this.attempts.pop();
+		this.scores.pop();
+	}
+
 };
 
 const getWordScore = (attemptedWord, chosenWord, rules) => {

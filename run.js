@@ -3,7 +3,7 @@ const readline = require('readline').createInterface({input: process.stdin, outp
 const keypress = require('keypress');
 keypress(process.stdin);
 // const bot = require("./randomBot");
-const bot = require("./basicBot");
+const bot = require("./botMk2");
 const Game = require("./Game");
 const rules = require("./rules").termoRules;
 
@@ -18,13 +18,13 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let autoScoreWord;
+let autoScoreWord = "PIZZA";
 
 let uiState = "botLog"; // botLog, config
 
 const game = new Game(rules);
 
-const games = [game, new Game(rules), new Game(rules), new Game(rules)];
+const games = [game];
 
 const numberOfGames = games.length;
 
@@ -52,14 +52,11 @@ const runTurn = () => {
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
 	registerBotGuess(game, botGuess);
-	registerBotGuess(games[1], botGuess);
+	// registerBotGuess(games[1], botGuess);
 
 	if (autoScoreWord) {
 		game.scores.pop();
 		game.addScore(botGuess, autoScoreWord);
-
-		games[1].scores.pop();
-		games[1].addScore(botGuess, autoScoreWord);
 	}
 
 	// drawBoard()
