@@ -18,8 +18,8 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-// let autoScoreWord = "PIZZA";
 let autoScoreWord = "";
+// let autoScoreWord = "";
 
 let uiState = "botLog"; // botLog, config
 
@@ -124,11 +124,14 @@ const processKeypress = (keyName) => {
 
 const getDictionary = () => {
 	if (dictionary) return dictionary;
-	const dictionaryFile = fs.readFileSync("./dictionaries/termo.json", "utf8");
-	dictionary = JSON.parse(dictionaryFile).map(w => normalizeDictionaryWord(w)).filter(w => w.length === 5);
+	// const dictionaryFile = fs.readFileSync("./dictionaries/termo.json", "utf8");
+	// dictionary = JSON.parse(dictionaryFile).map(w => normalizeDictionaryWord(w)).filter(w => w.length === 5);
 
 	// const dictionaryFile = fs.readFileSync("./dictionaries/portuguese.txt", "utf8");
-	// dictionary = dictionaryFile.split("\n").filter(word => word.length === numberOfLetters).map(w => normalizeDictionaryWord(w));
+	// dictionary = dictionaryFile.split("\n").filter(word => word.length === 5).map(w => normalizeDictionaryWord(w));
+
+	const dictionaryFile = fs.readFileSync("./dictionaries/english.txt", "utf8");
+	dictionary = dictionaryFile.split("\n").filter(word => word.length === 5).map(w => normalizeDictionaryWord(w));
 
 	if (dictionary.length === 0) throw new Error("Dictionary is empty.");
 	return dictionary;
