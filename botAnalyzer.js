@@ -1,6 +1,7 @@
 const rules = require("./rules").termoRules;
 const gameRunner = require("./gameRunner");
-const bot = require("./botMk2");
+// const bot = require("./botMk3");
+const bot = require("./botMk3");
 const fs = require("fs");
 
 let dictionary;
@@ -9,7 +10,8 @@ const run = () => {
 		// "XXXXA", // lost
 		// "XXXXB", // lost
 		// "AUDIO", // instant win
-		"TREMA", // win 1 turn left
+		"PIZZA", // win 1 turn left
+		// "DRENO", // win 1 turn left
 		// "TREME", // win 3 turns left
 		// "LIMPA", // win 0 turns left
 		// "LIMPO" // win 1 turn left
@@ -24,6 +26,7 @@ const run = () => {
 	}
 	// for (const word of getDictionary()) {
 	for (const word of list) {
+		console.time(`>>> Word ${word}`);
 		stats.runs++;
 		if (stats.runs % 100 === 0) console.log("Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
 		const gameData = gameRunner.run(rules, word, bot, getDictionary());
@@ -36,7 +39,7 @@ const run = () => {
 			stats.wins++;
 			stats.winsByTurnsLeft[gameData.turnsLeft] = (stats.winsByTurnsLeft[gameData.turnsLeft] || 0) + 1;
 		}
-
+		console.timeEnd(`>>> Word ${word}`);
 	}
 	console.log("");
 	console.log("FINISHED");
