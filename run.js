@@ -3,7 +3,7 @@ const readline = require('readline').createInterface({input: process.stdin, outp
 const keypress = require('keypress');
 keypress(process.stdin);
 // const bot = require("./randomBot");
-const bot = require("./botMk2");
+const bot = require("./botMk3");
 const Game = require("./Game");
 const rules = require("./rules").termoRules;
 
@@ -18,7 +18,8 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let autoScoreWord = "PIZZA";
+// let autoScoreWord = "PIZZA";
+let autoScoreWord = "";
 
 let uiState = "botLog"; // botLog, config
 
