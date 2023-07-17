@@ -3,7 +3,7 @@ const Game = require("./Game");
 /**
  * Runs a single game
  */
-const run = function (rules, chosenWord, bot, dictionary) {
+const run = async function (rules, chosenWord, bot, dictionary) {
 	const game = new Game(rules);
 	do {
 		const botGuess = bot.execute(game, dictionary).toUpperCase();

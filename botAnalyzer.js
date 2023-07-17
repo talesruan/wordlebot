@@ -1,21 +1,27 @@
 const rules = require("./rules").termoRules;
 const gameRunner = require("./gameRunner");
-// const bot = require("./botMk3");
+// const bot = require("./basicBot");
 const bot = require("./botMk3");
 const fs = require("fs");
 
 let dictionary;
-const run = () => {
+const run = async () => {
+	// const list = [
+	// 	// "XXXXA", // lost
+	// 	// "XXXXB", // lost
+	// 	"AUDIO", // instant win
+	// 	"PIZZA", // win 1 turn left
+	// 	"DRENO", // win 1 turn left
+	// 	"TREME", // win 3 turns left
+	// 	"LIMPA", // win 0 turns left
+	// 	"LIMPO" // win 1 turn left
+	// ];
+
 	const list = [
-		// "XXXXA", // lost
-		// "XXXXB", // lost
-		// "AUDIO", // instant win
-		"PIZZA", // win 1 turn left
-		// "DRENO", // win 1 turn left
-		// "TREME", // win 3 turns left
-		// "LIMPA", // win 0 turns left
-		// "LIMPO" // win 1 turn left
-	];
+		"PIZZA",
+		"PIZZA",
+		"PIZZA",
+	]
 
 	let runs = 0;
 	const stats = {
@@ -24,12 +30,14 @@ const run = () => {
 		losses: 0,
 		winsByTurnsLeft: {}
 	}
-	// for (const word of getDictionary()) {
-	for (const word of list) {
+	console.time(`Total time`);
+
+	for (const word of getDictionary().slice(8000, 8001)) {
+	// for (const word of list) {
 		console.time(`>>> Word ${word}`);
 		stats.runs++;
-		if (stats.runs % 100 === 0) console.log("Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
-		const gameData = gameRunner.run(rules, word, bot, getDictionary());
+		if (stats.runs % 100 === 0) console.log("Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
+		const gameData = await gameRunner.run(rules, word, bot, getDictionary());
 		// console.log("Game Results:");
 		// console.log("result", JSON.stringify(gameData, null, 2));
 
@@ -46,6 +54,7 @@ const run = () => {
 	console.log("========================================");
 	console.log("stats", JSON.stringify(stats, null, 2));
 	console.log("");
+	console.timeEnd(`Total time`);
 	displayStats(stats);
 };
 
@@ -76,4 +85,6 @@ const normalizeDictionaryWord = (word) => {
 }
 
 
-run();
+run().then(() => {
+	console.log("Done.");
+});

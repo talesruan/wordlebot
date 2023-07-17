@@ -45,11 +45,7 @@ const execute = (game, dictionary) => {
 		let totalPossibleWords = 0;
 		// console.time(`Test ${playWord} against ${possibleWords.dictionary.length} possible words`);
 		for (const possibleWord of possibleWords.dictionary) {
-
-			const test = testHypothesis(game, playWord, possibleWord, possibleWords);
-			totalPossibleWords += test.numberOfPossibleWords;
-			// console.log(`If I play ${playWord} and the chosen word is ${possibleWord} there will be ${test.numberOfPossibleWords} possible words.`);
-
+			totalPossibleWords += testHypothesis(game, playWord, possibleWord, possibleWords)
 		}
 		// console.timeEnd(`Test ${playWord} against ${possibleWords.dictionary.length} possible words`);
 		const avgPossibleWords = totalPossibleWords / possibleWords.dictionary.length;
@@ -61,7 +57,7 @@ const execute = (game, dictionary) => {
 			highScoreWords.push(playWord);
 		} else {
 			if (wordScore > highScore) {
-				console.log(`'${playWord}' got new Highscore of `, wordScore);
+				// console.log(`'${playWord}' got new Highscore of `, wordScore);
 				highScore = wordScore;
 				highScoreWords = [playWord]
 			}
@@ -85,14 +81,12 @@ const testHypothesis = (game, nextWord, chosenWord, dictionary) => {
 	const testGame = game;
 	testGame.attempts.push(nextWord);
 	testGame.addScore(nextWord, chosenWord);
-	const numberOfPossibleWords = getPossibleWords(testGame, dictionary).dictionary.length
+	const numberOfPossibleWords = getPossibleWords(testGame, dictionary, true).dictionary.length
 	testGame.undo();
-	return {
-		numberOfPossibleWords
-	}
+	return numberOfPossibleWords;
 }
 
-const getPossibleWords = (game, dictionaryWithFilters) => {
+const getPossibleWords = (game, dictionaryWithFilters, onlyLastFilter) => {
 
 	if (!(dictionaryWithFilters instanceof Object)) throw new Error("Expect dictionary with filters");
 	if (!(dictionaryWithFilters.filters instanceof Array)) throw new Error("Missing filters");
@@ -101,20 +95,22 @@ const getPossibleWords = (game, dictionaryWithFilters) => {
 	// const filters = [...dictionaryWithFilters.filters];
 	const newFilters = []
 
-	for (let attemptIndex = 0; attemptIndex < game.attempts.length; attemptIndex++) {
+	const startIndex = onlyLastFilter ? game.attempts.length - 1 : 0;
+
+	for (let attemptIndex = startIndex; attemptIndex < game.attempts.length; attemptIndex++) {
 		const attemptedWord = game.attempts[attemptIndex];
 		for (let pos = 0; pos < game.rules.numberOfLetters; pos++) {
 			const letter = attemptedWord[pos];
 			const letterScore = game.scores[attemptIndex][pos];
 			if (letterScore === SCORE_GRAY) {
 				// Cannot have that letter
-				newFilters.push(`gray,${letter}`);
+				addFilter(newFilters, `gray,${letter}`);
 			} else if (letterScore === SCORE_YELLOW) {
 				// has letter in the word, but NOT in this position
-				newFilters.push(`yellow,${letter},${pos}`);
+				addFilter(newFilters, `yellow,${letter},${pos}`);
 			} else if (letterScore === SCORE_GREEN) {
 				// letter in the position
-				newFilters.push(`green,${letter},${pos}`);
+				addFilter(newFilters, `green,${letter},${pos}`);
 			}
 		}
 	}
@@ -123,10 +119,6 @@ const getPossibleWords = (game, dictionaryWithFilters) => {
 
 	const possibleWords = applyFilters(dictionaryWithFilters, newFilters);
 	return possibleWords;
-	// return {
-	// 	dictionary: possibleWords,
-	// 	filters: filters
-	// };
 };
 
 const addFilter = (filters, newFilter) => {
