@@ -1,7 +1,7 @@
 const rules = require("./rules").termoRules;
 const gameRunner = require("./gameRunner");
 // const bot = require("./basicBot");
-const bot = require("./botMk3");
+const bot = require("./botMk4");
 const fs = require("fs");
 
 let dictionary;
@@ -33,7 +33,7 @@ const run = async () => {
 	console.time(`Total time`);
 
 	for (const word of getDictionary().slice(8000, 8001)) {
-	// for (const word of list) {
+	// for (const word of getDictionary()) {
 		console.time(`>>> Word ${word}`);
 		stats.runs++;
 		if (stats.runs % 100 === 0) console.log("Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);

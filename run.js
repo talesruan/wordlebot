@@ -2,7 +2,7 @@ const fs = require("fs");
 const readline = require('readline').createInterface({input: process.stdin, output: process.stdout,});
 const keypress = require('keypress');
 keypress(process.stdin);
-// const bot = require("./randomBot");
+// const bot = require("./basicBot");
 const bot = require("./botMk3");
 const Game = require("./Game");
 const rules = require("./rules").termoRules;
@@ -29,17 +29,17 @@ const games = [game];
 
 const numberOfGames = games.length;
 
-const run = () => {
+const run = async () => {
 	process.stdin.on('keypress', function (ch, key) {
 		if (key) processKeypress(key.name);
 	});
 	process.stdin.setRawMode(true);
-	runTurn();
+	await runTurn();
 	console.log("Dictionary has " + getDictionary().length + " words");
 	console.log("Press <TAB> for autoscore");
 };
 
-const runTurn = () => {
+const runTurn = async () => {
 	scoringCol = 0;
 	if (game.isWon()) {
 		drawBoard()
@@ -49,7 +49,7 @@ const runTurn = () => {
 	uiState = "botLog";
 	drawBoard()
 	console.log("Running bot...");
-	const botGuess = bot.execute(game, getDictionary()).toUpperCase();
+	const botGuess = (await bot.execute(game, getDictionary())).toUpperCase();
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
 	registerBotGuess(game, botGuess);

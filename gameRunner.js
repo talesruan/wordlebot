@@ -6,7 +6,7 @@ const Game = require("./Game");
 const run = async function (rules, chosenWord, bot, dictionary) {
 	const game = new Game(rules);
 	do {
-		const botGuess = bot.execute(game, dictionary).toUpperCase();
+		const botGuess = (await bot.execute(game, dictionary)).toUpperCase();
 		game.attempts.push(botGuess);
 		game.addScore(botGuess, chosenWord);
 	} while (game.isRunning());
