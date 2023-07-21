@@ -3,9 +3,11 @@ const readline = require('readline').createInterface({input: process.stdin, outp
 const keypress = require('keypress');
 keypress(process.stdin);
 // const bot = require("./basicBot");
-const bot = require("./botMk3");
+const bot = require("./botMk5");
 const Game = require("./Game");
-const rules = require("./rules").termoRules;
+// const rules = require("./rules").termoRules;
+
+const allRules = require("./rules").allRules;
 
 let dictionary;
 
@@ -18,16 +20,37 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let autoScoreWord = "";
+let autoScoreWords = [];
+let isAutoScore = false;
 // let autoScoreWord = "";
 
 let uiState = "botLog"; // botLog, config
 
-const game = new Game(rules);
+let rules;
+let games = [];
+let numberOfGames;
 
-const games = [game];
-
-const numberOfGames = games.length;
+const init = async () => {
+	for (let index = 0; index < allRules.length; index++) {
+		const rules = allRules[index];
+		console.log(`${index} - ${rules.name} \t- ${rules.rules.numberOfGames} game(s) of ${rules.rules.numberOfLetters} X ${rules.rules.maxNumberOfAttempts} `);
+	}
+	readline.question(`Choose game: `, input => {
+		const chosenRules = allRules[parseInt(input)];
+		if (!chosenRules) {
+			console.log("Invalid game");
+			process.exit();
+			return;
+		} else {
+			rules = chosenRules.rules;
+			numberOfGames = rules.numberOfGames;
+			for (let i = 0; i < numberOfGames; i++) {
+				games.push(new Game(rules));
+			}
+			run();
+		}
+	});
+};
 
 const run = async () => {
 	process.stdin.on('keypress', function (ch, key) {
@@ -39,9 +62,13 @@ const run = async () => {
 	console.log("Press <TAB> for autoscore");
 };
 
+const isAllGamesWon = () => {
+	return games.every(game => game.isWon());
+}
+
 const runTurn = async () => {
 	scoringCol = 0;
-	if (game.isWon()) {
+	if (isAllGamesWon()) {
 		drawBoard()
 		process.exit();
 		return;
@@ -49,19 +76,15 @@ const runTurn = async () => {
 	uiState = "botLog";
 	drawBoard()
 	console.log("Running bot...");
-	const botGuess = (await bot.execute(game, getDictionary())).toUpperCase();
+	const botGuess = (await bot.execute(games, getDictionary(), rules)).toUpperCase();
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
-	registerBotGuess(game, botGuess);
-	// registerBotGuess(games[1], botGuess);
+	games.forEach(game => registerBotGuess(game, botGuess));
 
-	if (autoScoreWord) {
-		game.scores.pop();
-		game.addScore(botGuess, autoScoreWord);
+	if (isAutoScore) { // TODO: Implement
+		// game.scores.pop();
+		// game.addScore(botGuess, autoScoreWord);
 	}
-
-	// drawBoard()
-
 	console.log("<ENTER> to continue");
 };
 const registerBotGuess = (game, word) => {
@@ -77,25 +100,31 @@ const validateUserScoring = (game) => {
 	// TODO: Implement
 }
 
+const getGameByCol = (col) => {
+	return games[Math.floor(col / rules.numberOfLetters)];
+};
+
 const processKeypress = (keyName) => {
 	if (uiState === "scoring") {
 		if (keyName === "return") {
 			scoringRow++;
 			runTurn();
 		} else if (keyName === "up") {
-			game.scores[scoringRow][scoringCol] = Math.min(SCORE_GREEN, game.scores[scoringRow][scoringCol] + 1);
-			drawBoard()
+			getGameByCol(scoringCol).scores[scoringRow][scoringCol % rules.numberOfLetters] = Math.min(SCORE_GREEN, getGameByCol(scoringCol).scores[scoringRow][scoringCol % rules.numberOfLetters] + 1);
+			drawBoard();
 		} else if (keyName === "down") {
-			game.scores[scoringRow][scoringCol] = Math.max(SCORE_GRAY, game.scores[scoringRow][scoringCol] - 1);
-			drawBoard()
+			getGameByCol(scoringCol).scores[scoringRow][scoringCol % rules.numberOfLetters] = Math.max(SCORE_GRAY, getGameByCol(scoringCol).scores[scoringRow][scoringCol % rules.numberOfLetters] - 1);
+			drawBoard();
 		} else if (keyName === "left") {
 			scoringCol = Math.max(0, scoringCol - 1);
+			drawBoard();
 		} else if (keyName === "right") {
-			scoringCol = Math.min(rules.numberOfLetters - 1, scoringCol + 1);
+			scoringCol = Math.min((rules.numberOfLetters * rules.numberOfGames) - 1, scoringCol + 1);
+			drawBoard();
 		}
 	} else if (uiState === "botLog") {
 		if (keyName === "return") {
-			if (autoScoreWord) {
+			if (isAutoScore) {
 				runTurn();
 			} else {
 				uiState = "scoring";
@@ -105,6 +134,7 @@ const processKeypress = (keyName) => {
 			uiState = "config";
 			// console.log("Received " + keyName);
 			readline.question(`Enter word for autoscore: `, word => {
+				// TODO: Implement
 				autoScoreWord = word.toUpperCase().substring(0, rules.numberOfLetters);
 				if (game.attempts.length > 0) {
 					const lastGuess = game.attempts[game.attempts.length - 1];
@@ -148,11 +178,13 @@ const drawBoard = () => {
 
 	console.clear();
 	console.log("");
-	console.log("UI STATE: " + uiState);
 	console.log("");
-	if (autoScoreWord) {
-		console.log(" ".repeat(boardMargin)+"AutoScore: " + autoScoreWord	);
+	if (isAutoScore) {
+		// console.log(" ".repeat(boardMargin)+"AutoScore: " + autoScoreWord); // TODO: Implement
 	}
+
+	const scoringGame = getGameByCol(scoringCol);
+
 	const separator = " ".repeat(boardMargin) + ("+---".repeat(rules.numberOfLetters) + "+" + " ".repeat(spaceBetweenBoards)).repeat(numberOfGames);
 	for (let row = 0; row < rules.maxNumberOfAttempts; row++) {
 		console.log(separator);
@@ -162,7 +194,9 @@ const drawBoard = () => {
 			for (let col = 0; col < rules.numberOfLetters; col++) {
 				const letter = game.attempts[row] ? game.attempts[row][col] : " ";
 				const score = game.scores[row] ? game.scores[row][col] : SCORE_NONE;
-				wordString += "|" + getColoredString(" " +letter + " ", getColorByScore(score));
+				let letterString = ` ${letter} `;
+				if (scoringGame === game && col === (scoringCol % rules.numberOfLetters) && row === scoringRow) letterString = `[${letter}]`;
+				wordString += "|" + getColoredString(letterString, getColorByScore(score));
 			}
 			wordString += "|" + " ".repeat(spaceBetweenBoards)
 		}
@@ -185,9 +219,9 @@ const drawBoard = () => {
 		console.log(keyboardString);
 	}
 	console.log("");
-	if (game.isWon()) {
+	if (isAllGamesWon()) {
 		console.log("GAME WON");
-	} else if (game.isLost()) {
+	} else if (games.every(game => game.isLost())) {
 		console.log("GAME LOST");
 	}
 };
@@ -231,5 +265,5 @@ const keyboardLayout = [
 	"  ZXCVBNM"
 ]
 
-run();
+init();
 // process.exit();
