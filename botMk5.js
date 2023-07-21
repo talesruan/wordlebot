@@ -9,7 +9,21 @@ const SCORE_GRAY = 1; // Attempted
 const SCORE_NONE = 0; // Not attempted
 
 const cache = {count: 0};
+
+const getDescription = () => ({
+	name: "Mk5",
+	description: "Brute force tests all words + multigame support"
+});
+
 const execute = (games, dictionary, rules) => {
+
+	if (games.every(game => game.isWon() || game.isLost())) {
+		console.log("My job here is done.");
+		return;
+	}
+
+	const game = games.find(game => !game.isWon());
+
 	if (getNumberOfCurrentAttempts(games) === 0) {
 		console.log("First attempt, so using hardcoded starter");
 		return "AUDIO";
@@ -17,8 +31,6 @@ const execute = (games, dictionary, rules) => {
 	// if (game.attempts.length === 1) {
 	// 	return "TERAS";
 	// }
-
-	const game = games[0];
 
 	const dictionaryWithFilters = {
 		dictionary,
@@ -177,5 +189,6 @@ const printWords = (dict) => {
 }
 
 module.exports = {
-	execute
+	execute,
+	getDescription
 };

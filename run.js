@@ -20,9 +20,8 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let autoScoreWords = [];
-let isAutoScore = false;
-// let autoScoreWord = "";
+let autoScoreWords = ["PODER", "ATOMO", "ANJOS", "FREIO"];
+let isAutoScore = true;
 
 let uiState = "botLog"; // botLog, config
 
@@ -68,7 +67,7 @@ const isAllGamesWon = () => {
 
 const runTurn = async () => {
 	scoringCol = 0;
-	if (isAllGamesWon()) {
+	if (games.every(game => game.isLost() || game.isWon())) {
 		drawBoard()
 		process.exit();
 		return;
@@ -76,14 +75,21 @@ const runTurn = async () => {
 	uiState = "botLog";
 	drawBoard()
 	console.log("Running bot...");
-	const botGuess = (await bot.execute(games, getDictionary(), rules)).toUpperCase();
+
+	const rawBotGuess = (await bot.execute(games, getDictionary(), rules));
+	if (!rawBotGuess) throw new Error("Bot refused to play.");
+	const botGuess = rawBotGuess.toUpperCase();
 	console.log("Bot guess: " + getColoredString(botGuess, "blue"));
 
-	games.forEach(game => registerBotGuess(game, botGuess));
+	games.filter(game => !game.isWon() && !game.isLost()).forEach(game => registerBotGuess(game, botGuess));
 
-	if (isAutoScore) { // TODO: Implement
-		// game.scores.pop();
-		// game.addScore(botGuess, autoScoreWord);
+	if (isAutoScore) {
+		for (let i = 0; i < numberOfGames; i++) {
+			const game = games[i];
+			if (game.isWon()) continue;
+			game.scores.pop();
+			game.addScore(botGuess, autoScoreWords[i]);
+		}
 	}
 	console.log("<ENTER> to continue");
 };
@@ -133,15 +139,23 @@ const processKeypress = (keyName) => {
 		} else if (keyName === "tab") {
 			uiState = "config";
 			// console.log("Received " + keyName);
-			readline.question(`Enter word for autoscore: `, word => {
-				// TODO: Implement
-				autoScoreWord = word.toUpperCase().substring(0, rules.numberOfLetters);
-				if (game.attempts.length > 0) {
-					const lastGuess = game.attempts[game.attempts.length - 1];
-					game.scores.pop();
-					game.addScore(lastGuess, autoScoreWord);
+			readline.question(`Enter words for autoscore separated with space: `, word => {
+				isAutoScore = false;
+				autoScoreWords = [];
+				const words = word.split(" ");
+				if (words.length !== games.length) return;
+				for (let i = 0; i < numberOfGames; i++) {
+					autoScoreWords[i] = words[i].toUpperCase().substring(0, rules.numberOfLetters);
+					const game = games[i];
+					if (game.attempts.length > 0) {
+						const lastGuess = game.attempts[game.attempts.length - 1];
+						game.scores.pop();
+						game.addScore(lastGuess, autoScoreWords[i]);
+					}
 				}
+				isAutoScore = true;
 			});
+
 		}
 	} else if (uiState === "config") {
 		if (keyName === "return") {
@@ -173,18 +187,25 @@ const normalizeDictionaryWord = (word) => {
 
 const drawBoard = () => {
 
-	const boardMargin = 4;
+	const boardMargin = 8;
 	const spaceBetweenBoards = 8;
+	const boardWidth = 21;
 
 	console.clear();
 	console.log("");
 	console.log("");
+
 	if (isAutoScore) {
-		// console.log(" ".repeat(boardMargin)+"AutoScore: " + autoScoreWord); // TODO: Implement
+		let autoScoreString = "Autoscore: " + " ".repeat(boardMargin - 2);
+		for (let i = 0; i < numberOfGames; i++) {
+			autoScoreString += autoScoreWords[i] + " ".repeat(spaceBetweenBoards + (boardWidth - autoScoreWords[i].length));
+		}
+		console.log(getColoredString(autoScoreString, "blue"));
 	}
 
-	const scoringGame = getGameByCol(scoringCol);
+	console.log("");
 
+	const scoringGame = getGameByCol(scoringCol);
 	const separator = " ".repeat(boardMargin) + ("+---".repeat(rules.numberOfLetters) + "+" + " ".repeat(spaceBetweenBoards)).repeat(numberOfGames);
 	for (let row = 0; row < rules.maxNumberOfAttempts; row++) {
 		console.log(separator);
@@ -218,6 +239,7 @@ const drawBoard = () => {
 		}
 		console.log(keyboardString);
 	}
+	console.log(getColoredString((`Bot: ${bot.getDescription().name} - ${bot.getDescription().description}`).padEnd(100, " "), "blue"));
 	console.log("");
 	if (isAllGamesWon()) {
 		console.log("GAME WON");
