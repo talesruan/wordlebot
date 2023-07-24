@@ -5,7 +5,7 @@ keypress(process.stdin);
 // const bot = require("./basicBot");
 const bot = require("./botMk5");
 const Game = require("./Game");
-// const rules = require("./rules").termoRules;
+const gameRender = require("./gameRender");
 
 const allRules = require("./rules").allRules;
 
@@ -186,6 +186,12 @@ const normalizeDictionaryWord = (word) => {
 }
 
 const drawBoard = () => {
+	gameRender.render({
+		rules, autoScoreWords, scoringRow, scoringCol, games, uiState, bot
+	});
+};
+
+const drawBoardOld = () => {
 
 	const boardMargin = 8;
 	const spaceBetweenBoards = 8;
@@ -216,7 +222,7 @@ const drawBoard = () => {
 				const letter = game.attempts[row] ? game.attempts[row][col] : " ";
 				const score = game.scores[row] ? game.scores[row][col] : SCORE_NONE;
 				let letterString = ` ${letter} `;
-				if (scoringGame === game && col === (scoringCol % rules.numberOfLetters) && row === scoringRow) letterString = `[${letter}]`;
+				if (!isAutoScore && scoringGame === game && col === (scoringCol % rules.numberOfLetters) && row === scoringRow) letterString = `[${letter}]`;
 				wordString += "|" + getColoredString(letterString, getColorByScore(score));
 			}
 			wordString += "|" + " ".repeat(spaceBetweenBoards)
@@ -285,7 +291,7 @@ const keyboardLayout = [
 	"QWERTYUIOP",
 	" ASDFGHJKL",
 	"  ZXCVBNM"
-]
+];
 
 init();
 // process.exit();

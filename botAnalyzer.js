@@ -1,8 +1,9 @@
-const rules = require("./rules").termoRules;
+const rules = require("./rules").quartetoRules;
 const gameRunner = require("./gameRunner");
 // const bot = require("./basicBot");
-const bot = require("./botMk4");
+const bot = require("./botMk5");
 const fs = require("fs");
+const gameRender = require("./gameRender");
 
 let dictionary;
 const run = async () => {
@@ -21,6 +22,11 @@ const run = async () => {
 		"PIZZA",
 		"PIZZA",
 		"PIZZA",
+	];
+
+	const gameWords = [
+		["NOTAR", "TESAO", "NULOS", "PARAR"],
+		["PARAR", "NULOS", "TESAO", "NOTAR"]
 	]
 
 	let runs = 0;
@@ -32,14 +38,15 @@ const run = async () => {
 	}
 	console.time(`Total time`);
 
-	for (const word of getDictionary().slice(8000, 8001)) {
+	// for (const word of getDictionary().slice(8000, 8001)) {
 	// for (const word of getDictionary()) {
-		console.time(`>>> Word ${word}`);
+	for(const words of gameWords) {
+		console.time(`>>> Words ${words.join(",")}`);
 		stats.runs++;
 		if (stats.runs % 100 === 0) console.log("Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
-		const gameData = await gameRunner.run(rules, word, bot, getDictionary());
-		// console.log("Game Results:");
-		// console.log("result", JSON.stringify(gameData, null, 2));
+		const gameData = await gameRunner.run(rules, words, bot, getDictionary());
+		console.log("Game Results:");
+		console.log("result", JSON.stringify(gameData, null, 2));
 
 		if (gameData.result === "loss") {
 			stats.losses++;
@@ -47,7 +54,7 @@ const run = async () => {
 			stats.wins++;
 			stats.winsByTurnsLeft[gameData.turnsLeft] = (stats.winsByTurnsLeft[gameData.turnsLeft] || 0) + 1;
 		}
-		console.timeEnd(`>>> Word ${word}`);
+		console.timeEnd(`>>> Words ${words.join(",")}`);
 	}
 	console.log("");
 	console.log("FINISHED");
