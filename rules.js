@@ -20,6 +20,11 @@ const allRules = [
 	{name: "Termo", rules: termoRules},
 	{name: "Dueto", rules: duetoRules},
 	{name: "Quarteto", rules: quartetoRules},
+	{name: "Sexteto", rules: {
+			numberOfLetters: 5,
+			maxNumberOfAttempts: 11,
+			numberOfGames: 6
+		}}
 ]
 
 module.exports = {

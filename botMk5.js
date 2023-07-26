@@ -1,12 +1,8 @@
+const scores = require("./scores");
+
 /**
- * Mk3 bot
+ * Mk5 bot
  */
-
-
-const SCORE_GREEN = 3;
-const SCORE_YELLOW = 2;
-const SCORE_GRAY = 1; // Attempted
-const SCORE_NONE = 0; // Not attempted
 
 const cache = {count: 0};
 
@@ -17,42 +13,118 @@ const getDescription = () => ({
 
 const execute = (games, dictionary, rules) => {
 
+	console.time("Bot execution");
+
 	if (games.every(game => game.isWon() || game.isLost())) {
 		console.log("My job here is done.");
 		return;
 	}
 
-	const game = games.find(game => !game.isWon());
+	// const game = games.find(game => !game.isWon());
 
 	if (getNumberOfCurrentAttempts(games) === 0) {
-		console.log("First attempt, so using hardcoded starter");
+		console.log("Using hardcoded starter");
 		return "AUDIO";
 	}
-	// if (game.attempts.length === 1) {
-	// 	return "TERAS";
+	// if (getNumberOfCurrentAttempts(games) === 1) {
+	// 	return "MUNDI";
 	// }
+
+	const runningGames = games.filter(game => game.isRunning());
 
 	const dictionaryWithFilters = {
 		dictionary,
 		filters: []
 	}
-	let possibleWords = getPossibleWords(game, dictionaryWithFilters);
 
-	// printWords(possibleWords);
-	console.log("Possible words: " + possibleWords.dictionary.length);
-	if (possibleWords.length === 0) {
-		console.log("No possible words. Don't know what to do.");
-		return "XXXXX";
-	} else if (possibleWords.dictionary.length === 1) {
-		console.log("Got it!");
-		return possibleWords.dictionary[0];
+	const listsOfScoredWords = [];
+	for (const game of runningGames) {
+		let possibleWords = getPossibleWords(game, dictionaryWithFilters);
+
+		// printWords(possibleWords);
+		console.log("Possible words: " + possibleWords.dictionary.length);
+		if (possibleWords.length === 0) {
+			console.log("No possible words. Don't know what to do.");
+			return "XXXXX";
+		} else if (possibleWords.dictionary.length === 1) {
+			console.log("Got it!");
+			return possibleWords.dictionary[0];
+		}
+
+		// Evaluates playable words:
+		listsOfScoredWords.push(scoreAllPlayableWords (game, dictionary, possibleWords));
 	}
 
+	// chooses best word
+	const aggregatedList = aggregateScoredWordLists(listsOfScoredWords);
+
+	if (aggregatedList.length === 0) {
+		console.log("No possible words. Don't know what to do.");
+		return "XXXXX";
+	}
+
+
+
+	// gets best word
+
+	// aggregatedList.sort((a, b) => (b.avgScore - a.avgScore));
+	aggregatedList.sort((a, b) => (a.avgAvgPossibleWords - b.avgAvgPossibleWords));
+
+	// console.log(`WORD\tSCORE\tPOSSIBLE WORDS`);
+	// for (const x of aggregatedList) {
+	// 	console.log(`${x.word}\t${x.avgScore}\t${x.avgAvgPossibleWords}`);
+	// }
+
+	console.timeEnd("Bot execution");
+	return aggregatedList[0].word;
+};
+
+const aggregateScoredWordLists = (lists) => {
+	const aggregatedList = [];
+	for (let wordIndex = 0; wordIndex < lists[0].length; wordIndex++) {
+		const aggregatedWord = {
+			word: lists[0][wordIndex].word
+		}
+		aggregatedList.push(aggregatedWord);
+
+		const listElements = [];
+		for (let listIndex = 0; listIndex < lists.length; listIndex++) {
+			const listElement = lists[listIndex][wordIndex];
+			listElements.push(listElement);
+		}
+
+		if (listElements.some(x => x.word !== aggregatedWord.word)) throw new Error();
+
+		aggregatedWord.avgScore = listElements.map(x => x.score).reduce((a, b) => (a + b)) / listElements.length;
+		aggregatedWord.avgAvgPossibleWords = listElements.map(x => x.avgPossibleWords).reduce((a, b) => (a + b)) / listElements.length;
+
+	}
+	return aggregatedList;
+}
+
+const scoreAllPlayableWords = (game, dictionary, possibleWords) => {
+	// const dictionaryWithFilters = {
+	// 	dictionary,
+	// 	filters: []
+	// }
+	// let possibleWords = getPossibleWords(game, dictionaryWithFilters);
+	//
+	// // printWords(possibleWords);
+	// console.log("Possible words: " + possibleWords.dictionary.length);
+	// if (possibleWords.length === 0) {
+	// 	console.log("No possible words. Don't know what to do.");
+	// 	return "XXXXX"; // TODO
+	// } else if (possibleWords.dictionary.length === 1) {
+	// 	console.log("Got it!");
+	// 	return possibleWords.dictionary[0]; // TODO
+	// }
+
 	console.log("Testing all playable words...");
-	console.time("Time");
+	// console.time("Time");
 	let n = 0;
 	let highScore = 0;
 	let highScoreWords = [];
+	const scoredWords = [];
 	for (const playWord of dictionary) {
 		n++;
 		if (n % 1000 === 0) console.log("Progress: ", `(${(n / dictionary.length * 100).toFixed(2)}%)`);
@@ -67,28 +139,25 @@ const execute = (games, dictionary, rules) => {
 		// console.log(`If I play ${playWord}, the number of possible words will reduce by ${reduction}, remaining ${avgPossibleWords} words on average.`);
 
 		const wordScore = reduction;
-		if (wordScore === highScore) {
-			highScoreWords.push(playWord);
-		} else {
-			if (wordScore > highScore) {
-				// console.log(`'${playWord}' got new Highscore of `, wordScore);
-				highScore = wordScore;
-				highScoreWords = [playWord]
-			}
-		}
+
+		scoredWords.push({
+			word: playWord,
+			score: wordScore, // lower = better -> 1 = must play
+			avgPossibleWords,
+		})
+
+		// if (wordScore === highScore) {
+		// 	highScoreWords.push(playWord);
+		// } else {
+		// 	if (wordScore > highScore) {
+		// 		// console.log(`'${playWord}' got new Highscore of `, wordScore);
+		// 		highScore = wordScore;
+		// 		highScoreWords = [playWord]
+		// 	}
+		// }
 	}
-	console.timeEnd("Time");
-
-	console.log("These words got a score of ", highScore);
-	printWords(highScoreWords)
-
-	if (highScoreWords.length === 0) {
-		console.log("No possible words. Don't know what to do.");
-		return "XXXXX";
-	}
-
-	return highScoreWords[0];
-};
+	return scoredWords;
+}
 
 const getNumberOfCurrentAttempts = (games) => {
 	return games[0].attempts.length;
@@ -120,13 +189,13 @@ const getPossibleWords = (game, dictionaryWithFilters, onlyLastFilter) => {
 		for (let pos = 0; pos < game.rules.numberOfLetters; pos++) {
 			const letter = attemptedWord[pos];
 			const letterScore = game.scores[attemptIndex][pos];
-			if (letterScore === SCORE_GRAY) {
+			if (letterScore === scores.SCORE_GRAY) {
 				// Cannot have that letter
 				addFilter(newFilters, `gray,${letter}`);
-			} else if (letterScore === SCORE_YELLOW) {
+			} else if (letterScore === scores.SCORE_YELLOW) {
 				// has letter in the word, but NOT in this position
 				addFilter(newFilters, `yellow,${letter},${pos}`);
-			} else if (letterScore === SCORE_GREEN) {
+			} else if (letterScore === scores.SCORE_GREEN) {
 				// letter in the position
 				addFilter(newFilters, `green,${letter},${pos}`);
 			}

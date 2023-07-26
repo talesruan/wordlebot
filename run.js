@@ -20,8 +20,8 @@ let scoringRow = 0;
 let scoringCol = 0;
 const currentScores = [];
 
-let autoScoreWords = ["PODER", "ATOMO", "ANJOS", "FREIO"];
-let isAutoScore = true;
+let autoScoreWords = [];
+let isAutoScore = false;
 
 let uiState = "botLog"; // botLog, config
 

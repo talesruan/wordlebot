@@ -25,8 +25,10 @@ const run = async () => {
 	];
 
 	const gameWords = [
-		["NOTAR", "TESAO", "NULOS", "PARAR"],
-		["PARAR", "NULOS", "TESAO", "NOTAR"]
+		// ["NOTAR", "TESAO", "NULOS", "PARAR"], // real game
+		// ["PARAR", "NULOS", "TESAO", "NOTAR"],
+		// ["ZEBRA", "PINTO", "ACHAR", "LUCRO"], // hard game
+		["RUBOR", "COURO", "DETER", "OUVIR"], // real game
 	]
 
 	let runs = 0;
