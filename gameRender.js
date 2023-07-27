@@ -107,6 +107,16 @@ const getGameByCol = (games, rules, col) => {
 	return games[Math.floor(col / rules.numberOfLetters)];
 };
 
+const printWords = (dict) => {
+	const wordsByLine = 20;
+	let string = "";
+	for (let i = 0; i < dict.length; i++) {
+		string += dict[i] + ((i + 1) % wordsByLine === 0 ? "\n" : " ");
+	}
+	console.log(string);
+}
+
 module.exports = {
-	render
+	render,
+	printWords
 };

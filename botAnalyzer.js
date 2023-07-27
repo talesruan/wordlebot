@@ -1,9 +1,9 @@
-const rules = require("./rules").quartetoRules;
 const gameRunner = require("./gameRunner");
 // const bot = require("./basicBot");
-const bot = require("./botMk5");
+const bot = require("./botMk6");
 const fs = require("fs");
 const gameRender = require("./gameRender");
+const rules = require("./rules").quartetoRules;
 
 let dictionary;
 const run = async () => {
@@ -18,18 +18,16 @@ const run = async () => {
 	// 	"LIMPO" // win 1 turn left
 	// ];
 
-	const list = [
-		"PIZZA",
-		"PIZZA",
-		"PIZZA",
-	];
-
 	const gameWords = [
 		// ["NOTAR", "TESAO", "NULOS", "PARAR"], // real game
 		// ["PARAR", "NULOS", "TESAO", "NOTAR"],
 		// ["ZEBRA", "PINTO", "ACHAR", "LUCRO"], // hard game
-		["RUBOR", "COURO", "DETER", "OUVIR"], // real game
+		// ["RUBOR", "COURO", "DETER", "OUVIR"], // real game
+		// ["PENIS"],
+		// ["PIZZA"],
+		["ARROZ", "ORGAO", "SUADO", "LARES"] // real game
 	]
+
 
 	let runs = 0;
 	const stats = {
