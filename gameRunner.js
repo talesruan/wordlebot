@@ -27,7 +27,7 @@ const run = async function (rules, words, bot, dictionary) {
 	} while (games.some(game => game.isRunning()));
 	// console.log(game.attempts);
 	// console.log(game.scores);
-	gameRender.render({rules, autoScoreWords: words, games});
+	gameRender.render({rules, autoScoreWords: words, games, bot});
 	const turnsTaken = games.map(game => game.attempts.length).reduce((a,b) => Math.max(a,b));
 
 	return {

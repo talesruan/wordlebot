@@ -1,11 +1,33 @@
 const gameRunner = require("./gameRunner");
 // const bot = require("./basicBot");
+// const bot = require("./botMk6");
 const bot = require("./botMk6");
 const fs = require("fs");
 const gameRender = require("./gameRender");
-const rules = require("./rules").quartetoRules;
+const ruleDefinitions = require("./rules");
 
+let rules;
 let dictionary;
+
+// const preset = "termo-pizza";
+const preset = "hard-quarteto";
+
+const presets = {
+	"termo-pizza": {
+		rules: ruleDefinitions.termoRules,
+		words: [["PIZZA"]]
+	},
+	"single-quarteto": {
+		rules: ruleDefinitions.quartetoRules,
+		// words: [["ARROZ", "ORGAO", "SUADO", "LARES"]]
+		words: [["DOBRO", "IMPOR", "FILHA", "FRASE"]]
+	},
+	"hard-quarteto": {
+		rules: ruleDefinitions.quartetoRules,
+		words: [["ZEBRA", "PINTO", "ACHAR", "LUCRO"]]
+	}
+}
+
 const run = async () => {
 	// const list = [
 	// 	// "XXXXA", // lost
@@ -18,7 +40,7 @@ const run = async () => {
 	// 	"LIMPO" // win 1 turn left
 	// ];
 
-	const gameWords = [
+	let gameWords = [
 		// ["NOTAR", "TESAO", "NULOS", "PARAR"], // real game
 		// ["PARAR", "NULOS", "TESAO", "NOTAR"],
 		// ["ZEBRA", "PINTO", "ACHAR", "LUCRO"], // hard game
@@ -26,7 +48,14 @@ const run = async () => {
 		// ["PENIS"],
 		// ["PIZZA"],
 		["ARROZ", "ORGAO", "SUADO", "LARES"] // real game
-	]
+	];
+
+	if (preset && presets[preset]) {
+		console.log(`Loading preset ${preset}`);
+		const presetConfig = presets[preset];
+		rules = presetConfig.rules;
+		gameWords = presetConfig.words;
+	}
 
 
 	let runs = 0;

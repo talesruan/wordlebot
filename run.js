@@ -3,7 +3,7 @@ const readline = require('readline').createInterface({input: process.stdin, outp
 const keypress = require('keypress');
 keypress(process.stdin);
 // const bot = require("./basicBot");
-const bot = require("./botMk5");
+const bot = require("./botMk6");
 const Game = require("./Game");
 const gameRender = require("./gameRender");
 

@@ -5,13 +5,13 @@ const keyboardLayout = [
 	" ASDFGHJKL",
 	"  ZXCVBNM"
 ];
-const render = function ({rules, autoScoreWords, scoringRow, scoringCol, games, uiState, bot}) {
+const render = function ({rules, autoScoreWords, scoringRow, scoringCol, games, uiState, bot, noClear, drawBoardOnly}) {
 	const numberOfGames = rules.numberOfGames;
 	const boardMargin = 8;
 	const spaceBetweenBoards = 8;
 	const boardWidth = 21;
 	const isAutoScore = autoScoreWords && autoScoreWords.length > 0;
-	console.clear();
+	if (!noClear) console.clear();
 	console.log("");
 	console.log("");
 
@@ -50,28 +50,30 @@ const render = function ({rules, autoScoreWords, scoringRow, scoringCol, games, 
 	console.log(separator);
 	console.log("");
 
-	const scoresByLetter = getScoresByLetter();
-	for (const keyboardRow of keyboardLayout) {
-		let keyboardString = ""
-		for (const char of keyboardRow) {
-			if (char === " ") keyboardString += "   ";
-			else keyboardString += getColoredString(" " +char + " ", getKeyboardColorByScore(scoresByLetter[char]));
+	if (!drawBoardOnly) {
+		const scoresByLetter = getScoresByLetter(games[0]);
+		for (const keyboardRow of keyboardLayout) {
+			let keyboardString = ""
+			for (const char of keyboardRow) {
+				if (char === " ") keyboardString += "   ";
+				else keyboardString += getColoredString(" " + char + " ", getKeyboardColorByScore(scoresByLetter[char]));
+			}
+			console.log(keyboardString);
 		}
-		console.log(keyboardString);
-	}
-	if (bot) {
-		console.log(getColoredString((`Bot: ${bot.getDescription().name} - ${bot.getDescription().description}`).padEnd(100, " "), "blue"));
-		console.log("");
-	}
-	if (games.every(game => game.isWon())) {
-		console.log("GAME WON");
-	} else if (games.every(game => game.isLost())) {
-		console.log("GAME LOST");
+		if (bot) {
+			console.log(getColoredString((`Bot: ${bot.getDescription().name} - ${bot.getDescription().description}`).padEnd(100, " "), "blue"));
+			console.log("");
+		}
+		if (games.every(game => game.isWon())) {
+			console.log("GAME WON");
+		} else if (games.every(game => game.isLost())) {
+			console.log("GAME LOST");
+		}
 	}
 };
 
 const getScoresByLetter = (game) => {
-	return []; // TODO: Implement
+	return game.getScoresByLetter();
 }
 
 const getColoredString = (string, color) => {

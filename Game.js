@@ -42,6 +42,22 @@ module.exports = class Game {
 		this.scores.pop();
 	}
 
+	getScoresByLetter () {
+		const scoreByLetter = {};
+		for (let col = 0; col < this.rules.numberOfLetters; col++) {
+			for (let row = 0; row < this.attempts.length; row++) {
+				const letter = this.attempts[row][col];
+				const score = this.scores[row][col];
+				if (!scoreByLetter[letter]) {
+					scoreByLetter[letter] = score;
+				} else {
+					scoreByLetter[letter] = Math.max(score, scoreByLetter[letter]);
+				}
+			}
+		}
+		return scoreByLetter;
+	}
+
 };
 
 const getWordScore = (attemptedWord, chosenWord, rules) => {
