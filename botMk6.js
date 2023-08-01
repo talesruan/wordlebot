@@ -104,9 +104,7 @@ const execute = (games, dictionary, rules) => {
 
 	console.log("Playing", JSON.stringify(candidateWords[0], null, 2));
 	
-	console.log("getPreviousPlays(games)", JSON.stringify(getPreviousPlays(games), null, 2));
 	console.timeEnd("Bot execution");
-	// throw new Error("STOP");
 	return candidateWords[0].word;
 };
 

@@ -10,8 +10,10 @@ let rules;
 let dictionary;
 
 // const preset = "termo-pizza";
+// const preset = "termo-all";
 const preset = "termo-all";
 // const preset = "hard-quarteto";
+const silent = true;
 
 const normalizeDictionaryWord = (word) => {
 	return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -54,6 +56,45 @@ const presets = {
 		rules: ruleDefinitions.termoRules,
 		words: getDictionary().map(word => [word])
 	},
+	"termo-loserwords": {
+		rules: ruleDefinitions.termoRules,
+		words: [
+			["BABES"],
+			["BAJAR"],
+			["FOCAR"],
+			["GANGO"],
+			["HABES"],
+			["JANGO"],
+			["JARRO"],
+			["JAZES"],
+			["JINGA"],
+			["JORRA"],
+			["MARMA"],
+			["MARRA"],
+			["NINHO"],
+			["PALAR"],
+			["PANGA"],
+			["PAPES"],
+			["PAPAO"],
+			["PARRO"],
+			["PAVAO"],
+			["PAVES"],
+			["PELAS"],
+			["PINHO"],
+			["RAJAR"],
+			["RALAR"],
+			["VAZES"],
+			["VELAS"],
+			["XANGO"],
+			["XINGA"],
+			["XOCAR"],
+			["ZANGA"],
+			["ZARRA"],
+			["ZARZA"],
+			["ZINHO"],
+			["ZORRA"],
+		]
+	},
 };
 
 const run = async () => {
@@ -92,7 +133,15 @@ const run = async () => {
 		losses: 0,
 		winsByTurnsLeft: {}
 	}
+
+	const losses = [];
 	console.time(`Total time`);
+
+	const voidLogger = {
+		log: () => {}
+	}
+
+	const logger = silent ? voidLogger: console;
 
 	// for (const word of getDictionary().slice(8000, 8001)) {
 	// for (const words of getDictionary().map(word => [word])) {
@@ -102,12 +151,14 @@ const run = async () => {
 		if (stats.runs % 10 === 0) bot.trimCache();
 		stats.runs++;
 		if (stats.runs % 1 === 0) console.log("-".repeat(50) + "Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
-		const gameData = await gameRunner.run(rules, words, bot, getDictionary());
-		console.log("Game Results:");
-		console.log("result", JSON.stringify(gameData, null, 2));
+		const gameData = await gameRunner.run(rules, words, bot, getDictionary(), !silent, logger);
+		// console.log("Game Results:");
+		// console.log("result", JSON.stringify(gameData, null, 2));
 
+		console.log(`${words.join(",")} - ${gameData.result} - ${gameData.turnsLeft} turns left`);
 		if (gameData.result === "loss") {
 			stats.losses++;
+			losses.push(words.join(","));
 		} else if (gameData.result === "win") {
 			stats.wins++;
 			stats.winsByTurnsLeft[gameData.turnsLeft] = (stats.winsByTurnsLeft[gameData.turnsLeft] || 0) + 1;
@@ -117,7 +168,11 @@ const run = async () => {
 	console.log("");
 	console.log("FINISHED");
 	console.log("========================================");
-	console.log("stats", JSON.stringify(stats, null, 2));
+	console.log("");
+	console.log("> Losses: ");
+	for (const loss of losses) {
+		console.log("- " + loss);
+	}
 	console.log("");
 	console.timeEnd(`Total time`);
 	displayStats(stats);

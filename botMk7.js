@@ -12,13 +12,11 @@ const getDescription = () => ({
 	description: "Brute force tests all words + multigame support + double word scoring + precalculated values"
 });
 
-const execute = (games, dictionary, rules) => {
+const execute = (games, dictionary, rules, logger = console) => {
 
-	console.time("Bot execution");
 
 	if (games.every(game => game.isWon() || game.isLost())) {
-		console.log("My job here is done.");
-		console.timeEnd("Bot execution");
+		logger.log("My job here is done.");
 		return;
 	}
 
@@ -27,20 +25,17 @@ const execute = (games, dictionary, rules) => {
 	const attemptNumber = games.map(game => game.attempts.length).reduce((a,b) => Math.max(a,b));
 
 	if (attemptNumber === 0) {
-		console.log("Using hardcoded starter");
-		console.timeEnd("Bot execution");
+		logger.log("Using hardcoded starter");
 		return "AUDIO";
 	}
 	if (attemptNumber === 1 && games.length === 1) {
 
-		console.log("Using precalculation");
+		logger.log("Using precalculation");
 		const precalculation = getPrecalculation(getDescription().name, "AUDIO", games[0].rules.language);
 		const score = games[0].scores[0];
 		const scoreString = score.join("");
-		console.timeEnd("Bot execution");
 		return precalculation[scoreString];
 
-		// console.timeEnd("Bot execution");
 		// return "TERAS";
 	}
 
@@ -54,25 +49,39 @@ const execute = (games, dictionary, rules) => {
 	const listsOfScoredWords = [];
 	for (const game of runningGames) {
 		let possibleWords = getPossibleWords(game, dictionaryWithFilters);
-		console.log("Possible words: " + possibleWords.dictionary.length);
+		logger.log("Possible words: " + possibleWords.dictionary.length);
+
+		// if (possibleWords.dictionary.length < 50) {
+		// 	printWords(possibleWords.dictionary);
+		// }
 		if (possibleWords.dictionary.length === 0) {
-			console.timeEnd("Bot execution");
-			console.log("No possible words. Don't know what to do.");
+			logger.log("No possible words. Don't know what to do.");
 			return "XXXXX";
 		} else if (possibleWords.dictionary.length === 1) {
-			console.log("Got it!");
-			console.timeEnd("Bot execution");
+			logger.log("Got it!");
 			return possibleWords.dictionary[0];
 		}
+
+		if (runningGames.length === 1) {
+			const attemptsLeft = game.rules.maxNumberOfAttempts - attemptNumber;
+
+			if (attemptsLeft === 1) {
+				logger.log("Last chance, will have to guess the answer");
+				return possibleWords.dictionary[0];
+			} else if (attemptsLeft >= 2 && possibleWords.dictionary.length === 2) {
+				logger.log("2 possible words left. Guessing word.");
+				return possibleWords.dictionary[0];
+			}
+		}
 		// Evaluates playable words:
-		listsOfScoredWords.push(scoreAllPlayableWords (game, dictionary, possibleWords));
+		listsOfScoredWords.push(scoreAllPlayableWords (game, dictionary, possibleWords, logger));
 	}
 
 	// chooses best word
 	const aggregatedList = aggregateScoredWordLists(listsOfScoredWords);
 
 	if (aggregatedList.length === 0) {
-		console.log("No possible words. Don't know what to do.");
+		logger.log("No possible words. Don't know what to do.");
 		return "XXXXX";
 	}
 	// gets best word
@@ -88,7 +97,7 @@ const execute = (games, dictionary, rules) => {
 	const candidateWords = [];
 	for (let i = 0; i < numberOfConsideredWords; i++) {
 		const x = aggregatedList[i];
-		// console.log(`${x.word}\t${x.avgScore}`);
+		// logger.log(`${x.word}\t${x.avgScore}`);
 		candidateWords.push(x);
 	}
 
@@ -107,16 +116,13 @@ const execute = (games, dictionary, rules) => {
 
 	candidateWords.sort((a, b) => (b.compoundScore - a.compoundScore));
 
-	console.log("WORD\tSCORE\tCD SCORE\tCOMPOUND SCORE");
+	logger.log("WORD\tSCORE\tCD SCORE\tCOMPOUND SCORE");
 	for (const x of candidateWords) {
-		console.log(`${x.word}\t${x.avgScore.toFixed(4)}\t${x.candidateScore.toFixed(4)}\t${x.compoundScore.toFixed(4)}`);
+		logger.log(`${x.word}\t${x.avgScore.toFixed(4)}\t${x.candidateScore.toFixed(4)}\t${x.compoundScore.toFixed(4)}`);
 	}
 
-	console.log("Playing", JSON.stringify(candidateWords[0], null, 2));
+	logger.log("Playing", JSON.stringify(candidateWords[0], null, 2));
 	
-	console.log("getPreviousPlays(games)", JSON.stringify(getPreviousPlays(games), null, 2));
-	console.timeEnd("Bot execution");
-	// throw new Error("STOP");
 	return candidateWords[0].word;
 };
 
@@ -226,13 +232,13 @@ const aggregateScoredWordLists = (lists) => {
 	return aggregatedList;
 }
 
-const scoreAllPlayableWords = (game, dictionary, possibleWords) => {
-	console.log("Testing all playable words...");
+const scoreAllPlayableWords = (game, dictionary, possibleWords, logger) => {
+	logger.log("Testing all playable words...");
 	let n = 0;
 	const scoredWords = [];
 	for (const playWord of dictionary) {
 		n++;
-		if (n % 1000 === 0) console.log("Progress: ", `(${(n / dictionary.length * 100).toFixed(2)}%)`);
+		if (n % 1000 === 0) logger.log("Progress: ", `(${(n / dictionary.length * 100).toFixed(2)}%)`);
 		let totalPossibleWords = 0;
 		for (const possibleWord of possibleWords.dictionary) {
 			totalPossibleWords += testHypothesis(game, playWord, possibleWord, possibleWords)
@@ -240,7 +246,7 @@ const scoreAllPlayableWords = (game, dictionary, possibleWords) => {
 		const avgPossibleWords = totalPossibleWords / possibleWords.dictionary.length;
 		const reduction = possibleWords.dictionary.length - avgPossibleWords;
 		const x = reduction / (possibleWords.dictionary.length - 1) * 100;
-		// console.log(`If I play ${playWord}, the number of possible words will reduce by ${reduction}, remaining ${avgPossibleWords} words on average, reduction of ${x}%`);
+		// logger.log(`If I play ${playWord}, the number of possible words will reduce by ${reduction}, remaining ${avgPossibleWords} words on average, reduction of ${x}%`);
 		const wordScore = reduction;
 		scoredWords.push({
 			word: playWord,
@@ -331,14 +337,14 @@ const clearCache = () => {
 	cache = {count: 0};
 };
 
-const trimCache = () => {
+const trimCache = (logger = console) => {
 	const limit = 200000;
 	const cacheEntries = Object.keys(cache).length;
 	if (cacheEntries > limit) {
-		console.log(`${" ".repeat(60)}Clearing cache entries: ${Object.keys(cache).length}/${limit}`);
+		logger.log(`${" ".repeat(60)}Clearing cache entries: ${Object.keys(cache).length}/${limit}`);
 		cache = {count: 0};
 	} else {
-		console.log(`${" ".repeat(60)}Cache is fine: ${Object.keys(cache).length}/${limit}`);
+		logger.log(`${" ".repeat(60)}Cache is fine: ${Object.keys(cache).length}/${limit}`);
 	}
 };
 
@@ -347,6 +353,15 @@ const getPrecalculation = (botName, starter, language) => {
 	const fileName = `${botName}-${starter}-${language}`.toLowerCase();
 	const file = fs.readFileSync(`./precalculated/${fileName}.json`, "utf8");
 	return JSON.parse(file);
+}
+
+const printWords = (dict, logger) => {
+	const wordsByLine = 20;
+	let string = "";
+	for (let i = 0; i < dict.length; i++) {
+		string += dict[i] + ((i + 1) % wordsByLine === 0 ? "\n" : " ");
+	}
+	logger.log(string);
 }
 
 module.exports = {

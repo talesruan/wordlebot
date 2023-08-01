@@ -4,17 +4,19 @@ const gameRender = require("./gameRender");
 /**
  * Runs a single game
  */
-const run = async function (rules, words, bot, dictionary) {
+const run = async function (rules, words, bot, dictionary, renderEachGame = false, logger = console) {
 	const games = []
 	for (let i = 0; i < rules.numberOfGames; i++) {
 		games.push(new Game(rules));
 	}
 
 	do {
-		const rawBotGuess = (await bot.execute(games, dictionary, rules)).toUpperCase();
+		// console.time("Bot execution");
+		const rawBotGuess = (await bot.execute(games, dictionary, rules, logger)).toUpperCase();
+		// console.timeEnd("Bot execution");
 		if (!rawBotGuess) throw new Error("Bot refused to play.");
 		const botGuess = rawBotGuess.toUpperCase();
-		console.log("Bot guess: " + botGuess);
+		console.log("> " + botGuess);
 
 		for (let i = 0; i < rules.numberOfGames; i++) {
 			const game = games[i];
@@ -27,7 +29,7 @@ const run = async function (rules, words, bot, dictionary) {
 	} while (games.some(game => game.isRunning()));
 	// console.log(game.attempts);
 	// console.log(game.scores);
-	gameRender.render({rules, autoScoreWords: words, games, bot});
+	if (renderEachGame) gameRender.render({rules, autoScoreWords: words, games, bot});
 	const turnsTaken = games.map(game => game.attempts.length).reduce((a,b) => Math.max(a,b));
 
 	return {
