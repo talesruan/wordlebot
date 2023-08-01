@@ -1,7 +1,7 @@
 const gameRunner = require("./gameRunner");
 // const bot = require("./basicBot");
 // const bot = require("./botMk6");
-const bot = require("./botMk6");
+const bot = require("./botMk7");
 const fs = require("fs");
 const gameRender = require("./gameRender");
 const ruleDefinitions = require("./rules");
@@ -10,7 +10,25 @@ let rules;
 let dictionary;
 
 // const preset = "termo-pizza";
-const preset = "hard-quarteto";
+const preset = "termo-all";
+// const preset = "hard-quarteto";
+
+const normalizeDictionaryWord = (word) => {
+	return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+};
+
+const getDictionary = () => {
+	if (dictionary) return dictionary;
+	const dictionaryFile = fs.readFileSync("./dictionaries/termo.json", "utf8");
+	dictionary = JSON.parse(dictionaryFile).map(w => normalizeDictionaryWord(w)).filter(w => w.length === 5);
+
+	// const dictionaryFile = fs.readFileSync("./dictionaries/portuguese.txt", "utf8");
+	// dictionary = dictionaryFile.split("\n").filter(word => word.length === numberOfLetters).map(w => normalizeDictionaryWord(w));
+
+	if (dictionary.length === 0) throw new Error("Dictionary is empty.");
+	return dictionary;
+};
+
 
 const presets = {
 	"termo-pizza": {
@@ -25,8 +43,18 @@ const presets = {
 	"hard-quarteto": {
 		rules: ruleDefinitions.quartetoRules,
 		words: [["ZEBRA", "PINTO", "ACHAR", "LUCRO"]]
-	}
-}
+	},
+	// "termo-100": {
+	// 	rules: ruleDefinitions.termoRules,
+	// 	words: [
+	// 		["TODO"]
+	// 	]
+	// },
+	"termo-all": {
+		rules: ruleDefinitions.termoRules,
+		words: getDictionary().map(word => [word])
+	},
+};
 
 const run = async () => {
 	// const list = [
@@ -54,9 +82,8 @@ const run = async () => {
 		console.log(`Loading preset ${preset}`);
 		const presetConfig = presets[preset];
 		rules = presetConfig.rules;
-		gameWords = presetConfig.words;
+		gameWords = presetConfig.words.map(line => line.map(w => normalizeDictionaryWord(w)).filter(w => w.length === rules.numberOfLetters));
 	}
-
 
 	let runs = 0;
 	const stats = {
@@ -68,11 +95,13 @@ const run = async () => {
 	console.time(`Total time`);
 
 	// for (const word of getDictionary().slice(8000, 8001)) {
-	// for (const word of getDictionary()) {
+	// for (const words of getDictionary().map(word => [word])) {
 	for(const words of gameWords) {
 		console.time(`>>> Words ${words.join(",")}`);
+
+		if (stats.runs % 10 === 0) bot.trimCache();
 		stats.runs++;
-		if (stats.runs % 100 === 0) console.log("Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
+		if (stats.runs % 1 === 0) console.log("-".repeat(50) + "Bot analyzer Progress: ", `(${(stats.runs / getDictionary().length * 100).toFixed(2)}%)`, stats.runs);
 		const gameData = await gameRunner.run(rules, words, bot, getDictionary());
 		console.log("Game Results:");
 		console.log("result", JSON.stringify(gameData, null, 2));
@@ -103,23 +132,6 @@ const displayStats = (stats) => {
 		console.log(i + " TURNS: ", stats.winsByTurnsLeft[i] || 0, `(${((stats.winsByTurnsLeft[i] || 0) / stats.runs * 100).toFixed(2)}%)`);
 	}
 };
-
-const getDictionary = () => {
-	if (dictionary) return dictionary;
-	const dictionaryFile = fs.readFileSync("./dictionaries/termo.json", "utf8");
-	dictionary = JSON.parse(dictionaryFile).map(w => normalizeDictionaryWord(w)).filter(w => w.length === 5);
-
-	// const dictionaryFile = fs.readFileSync("./dictionaries/portuguese.txt", "utf8");
-	// dictionary = dictionaryFile.split("\n").filter(word => word.length === numberOfLetters).map(w => normalizeDictionaryWord(w));
-
-	if (dictionary.length === 0) throw new Error("Dictionary is empty.");
-	return dictionary;
-};
-
-const normalizeDictionaryWord = (word) => {
-	return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-}
-
 
 run().then(() => {
 	console.log("Done.");

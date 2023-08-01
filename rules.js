@@ -1,19 +1,22 @@
 const termoRules = {
 	numberOfLetters: 5,
 	maxNumberOfAttempts: 6,
-	numberOfGames: 1
+	numberOfGames: 1,
+	language: "ptbr"
 };
 
 const duetoRules = {
 	numberOfLetters: 5,
 	maxNumberOfAttempts: 7,
-	numberOfGames: 2
+	numberOfGames: 2,
+	language: "ptbr"
 };
 
 const quartetoRules = {
 	numberOfLetters: 5,
 	maxNumberOfAttempts: 9,
-	numberOfGames: 4
+	numberOfGames: 4,
+	language: "ptbr"
 };
 
 const allRules = [
