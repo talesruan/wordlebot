@@ -6,7 +6,7 @@ const rules = require("./rules").termoRules;
 const fs = require("fs");
 
 const numberOfLetters = rules.numberOfLetters;
-const starterWord = "AUDIO";
+const starterWord = "SERIA";
 
 let dictionary;
 

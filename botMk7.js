@@ -14,6 +14,7 @@ const getDescription = () => ({
 
 const execute = (games, dictionary, rules, logger = console) => {
 
+	const starter = "SERIA";
 
 	if (games.every(game => game.isWon() || game.isLost())) {
 		logger.log("My job here is done.");
@@ -26,17 +27,14 @@ const execute = (games, dictionary, rules, logger = console) => {
 
 	if (attemptNumber === 0) {
 		logger.log("Using hardcoded starter");
-		return "AUDIO";
+		return starter;
 	}
 	if (attemptNumber === 1 && games.length === 1) {
-
 		logger.log("Using precalculation");
-		const precalculation = getPrecalculation(getDescription().name, "AUDIO", games[0].rules.language);
+		const precalculation = getPrecalculation(getDescription().name, starter, games[0].rules.language);0
 		const score = games[0].scores[0];
 		const scoreString = score.join("");
 		return precalculation[scoreString];
-
-		// return "TERAS";
 	}
 
 	const runningGames = games.filter(game => game.isRunning());
@@ -51,9 +49,9 @@ const execute = (games, dictionary, rules, logger = console) => {
 		let possibleWords = getPossibleWords(game, dictionaryWithFilters);
 		logger.log("Possible words: " + possibleWords.dictionary.length);
 
-		// if (possibleWords.dictionary.length < 50) {
-		// 	printWords(possibleWords.dictionary);
-		// }
+		if (possibleWords.dictionary.length < 50) {
+			printWords(possibleWords.dictionary, logger);
+		}
 		if (possibleWords.dictionary.length === 0) {
 			logger.log("No possible words. Don't know what to do.");
 			return "XXXXX";
